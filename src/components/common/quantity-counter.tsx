@@ -14,6 +14,7 @@ const QuantityCounter: React.FC<IQuantityCounter> = ({ quantity, onIncrement, on
   return (
     <div className='flex h-9'>
       <Button
+        aria-label='Decrement quantity'
         onClick={onDecrement}
         disabled={isLoading}
         size={'icon-xs'}
@@ -31,6 +32,7 @@ const QuantityCounter: React.FC<IQuantityCounter> = ({ quantity, onIncrement, on
       </div>
 
       <Button
+        aria-label='Increment quantity'
         onClick={onIncrement}
         disabled={isLoading}
         size={'icon-xs'}

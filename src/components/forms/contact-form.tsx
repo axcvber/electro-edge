@@ -28,7 +28,7 @@ const ContactForm = () => {
   const { toast } = useToast()
 
   const onSubmit = async (data: ContactFormSchemaType) => {
-    await new Promise((resolve) => setTimeout(resolve, 5000))
+    await new Promise((resolve) => setTimeout(resolve, 3000))
 
     form.reset()
 

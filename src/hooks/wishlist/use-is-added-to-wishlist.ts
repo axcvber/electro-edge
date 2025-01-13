@@ -15,5 +15,5 @@ export const useIsAddedToWishlist = (variantId: string) => {
     },
   })
 
-  return isAdded
+  return !!isAdded
 }

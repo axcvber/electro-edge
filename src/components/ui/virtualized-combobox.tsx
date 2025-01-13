@@ -18,6 +18,7 @@ export interface VirtualizedComboboxProps {
   validationError?: boolean
   disabled?: boolean
   loading?: boolean
+  id?: string
 }
 
 export function VirtualizedCombobox({
@@ -30,6 +31,7 @@ export function VirtualizedCombobox({
   disabled,
   validationError,
   loading,
+  id,
 }: VirtualizedComboboxProps) {
   const [open, setOpen] = React.useState<boolean>(false)
   const [selectedOption, setSelectedOption] = React.useState<string>(defaultValue)
@@ -45,9 +47,10 @@ export function VirtualizedCombobox({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant={validationError ? 'outline-destructive' : 'outline'}
           role='combobox'
           aria-expanded={open}
@@ -157,7 +160,7 @@ const VirtualizedCommand = ({
                 })
               }}
             >
-              <span className='line-clamp-1'> {filteredOptions[virtualOption.index].label}</span>
+              <span className='line-clamp-1'>{filteredOptions[virtualOption.index].label}</span>
               <Check
                 className={cn(
                   'ml-auto h-4 w-4',

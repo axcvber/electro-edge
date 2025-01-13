@@ -22,6 +22,7 @@ const FormInputPass: React.FC<FormInputProps> = ({ control, name, label, placeho
           <FormControl>
             <div className='relative overflow-hidden'>
               <Input
+                aria-label={label}
                 error={!!error}
                 placeholder={placeholder}
                 type={show ? 'text' : 'password'}

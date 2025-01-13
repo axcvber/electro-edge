@@ -7,6 +7,8 @@ interface Provinces {
 }
 
 export const getCountryProvinces = async (countryId: string) => {
+  console.log('have been called')
+
   const response = await fetch(
     `https://tech-bud1.myshopify.com/admin/api/2024-01/countries/${countryId}/provinces.json?fields=id,name,code`,
     {

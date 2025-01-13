@@ -59,7 +59,13 @@ const CartItem: React.FC<BaseCartLine> = ({ id: lineId, merchandise, quantity, c
       </div>
 
       <div className='text-end col-start-6 col-end-8 row-start-1 self-start xl:self-center'>
-        <Button isLoading={isRemoving} onClick={handleRemoveCartItem} variant={'outline-destructive'} size={'icon-xs'}>
+        <Button
+          aria-label='Remove'
+          isLoading={isRemoving}
+          onClick={handleRemoveCartItem}
+          variant={'outline-destructive'}
+          size={'icon-xs'}
+        >
           <Trash2 />
         </Button>
       </div>

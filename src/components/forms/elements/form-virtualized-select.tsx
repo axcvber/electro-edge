@@ -25,9 +25,12 @@ const FormVirtualizedSelect: React.FC<IFormVirtualizedSelect> = ({
       name={name}
       render={({ fieldState: { error } }) => (
         <FormItem className={className}>
-          <FormLabel required={required}>{label}</FormLabel>
+          <FormLabel htmlFor={label} required={required}>
+            {label}
+          </FormLabel>
           <FormControl>
             <VirtualizedCombobox
+              id={label}
               defaultValue={defaultValue}
               placeholder={placeholder}
               searchPlaceholder={searchPlaceholder}

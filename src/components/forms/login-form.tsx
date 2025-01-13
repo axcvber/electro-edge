@@ -16,7 +16,7 @@ import FormInput from './elements/form-input'
 import type ReCAPTCHA from 'react-google-recaptcha'
 import { useRef, useTransition } from 'react'
 import { loginUser } from '@/actions/user/login-user'
-import { Captcha } from '../common/captcha'
+import { Captcha } from '@/components/common/captcha'
 
 interface ILoginForm {
   resetPassCallback?: () => void
@@ -57,7 +57,6 @@ const LoginForm: React.FC<ILoginForm> = ({ signUpCallback, resetPassCallback }) 
 
   const handleLogin = async (values: LoginFormSchemaType, token: string) => {
     const loginData = await loginUser(values, token, callbackUrl)
-
     if (loginData?.error) {
       toast({
         title: loginData.error,
@@ -106,6 +105,7 @@ const LoginForm: React.FC<ILoginForm> = ({ signUpCallback, resetPassCallback }) 
                   <FormControl>
                     <div className='relative'>
                       <Input
+                        aria-label='Password'
                         error={!!error}
                         className='pr-32'
                         placeholder={'Enter password'}

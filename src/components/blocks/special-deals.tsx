@@ -34,7 +34,7 @@ const SpecialDeals: React.FC<SpecialDealsFields> = ({ items }) => {
             href={item.fields.button_link || '/'}
             className={cn(
               'relative flex items-center p-10 border rounded-md group overflow-hidden',
-              inx === 0 && 'md:col-span-2 md:row-span-2 '
+              inx === 0 && 'md:col-span-2 md:row-span-2'
             )}
           >
             <div className='max-w-sm space-y-4 text-white'>
