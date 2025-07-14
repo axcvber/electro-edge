@@ -180,9 +180,9 @@ export type Article = HasMetafields & Node & OnlineStorePublishable & Trackable 
   id: Scalars['ID']['output'];
   /** The image associated with the article. */
   image?: Maybe<Image>;
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
   onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
@@ -197,7 +197,7 @@ export type Article = HasMetafields & Node & OnlineStorePublishable & Trackable 
   tags: Array<Scalars['String']['output']>;
   /** The article’s name. */
   title: Scalars['String']['output'];
-  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
 };
 
@@ -299,12 +299,18 @@ export enum ArticleSortKeys {
   UpdatedAt = 'UPDATED_AT'
 }
 
-/** Represents a generic custom attribute. */
+/** Represents a generic custom attribute, such as whether an order is a customer's first. */
 export type Attribute = {
   __typename?: 'Attribute';
-  /** Key or name of the attribute. */
+  /**
+   * The key or name of the attribute. For example, `"customersFirstOrder"`.
+   *
+   */
   key: Scalars['String']['output'];
-  /** Value of the attribute. */
+  /**
+   * The value of the attribute. For example, `"true"`.
+   *
+   */
   value?: Maybe<Scalars['String']['output']>;
 };
 
@@ -421,9 +427,9 @@ export type Blog = HasMetafields & Node & OnlineStorePublishable & {
   handle: Scalars['String']['output'];
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
   onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
@@ -550,6 +556,17 @@ export type BrandColors = {
   secondary: Array<BrandColorGroup>;
 };
 
+/**
+ * The input fields for obtaining the buyer's identity.
+ *
+ */
+export type BuyerInput = {
+  /** The identifier of the company location. */
+  companyLocationId?: InputMaybe<Scalars['ID']['input']>;
+  /** The customer access token retrieved from the [Customer Accounts API](https://shopify.dev/docs/api/customer#step-obtain-access-token). */
+  customerAccessToken: Scalars['String']['input'];
+};
+
 /** Card brand, such as Visa or Mastercard, which can be used for payments. */
 export enum CardBrand {
   /** American Express. */
@@ -606,9 +623,9 @@ export type Cart = HasMetafields & Node & {
   id: Scalars['ID']['output'];
   /** A list of lines containing information about the items the customer intends to purchase. */
   lines: BaseCartLineConnection;
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** A note that's associated with the cart. For example, the note can be a personalized message to the buyer. */
   note?: Maybe<Scalars['String']['output']>;
@@ -717,12 +734,27 @@ export type CartBuyerIdentity = {
    * The rank of the preferences is determined by the order of the addresses in the array. Preferences
    * can be used to populate relevant fields in the checkout flow.
    *
+   * As of the `2025-01` release, `buyerIdentity.deliveryAddressPreferences` is deprecated.
+   * Delivery addresses are now part of the `CartDelivery` object and managed with three new mutations:
+   * - `cartDeliveryAddressAdd`
+   * - `cartDeliveryAddressUpdate`
+   * - `cartDeliveryAddressDelete`
+   *
+   * @deprecated Use `cart.delivery` instead.
    */
   deliveryAddressPreferences: Array<DeliveryAddress>;
   /** The email address of the buyer that's interacting with the cart. */
   email?: Maybe<Scalars['String']['output']>;
   /** The phone number of the buyer that's interacting with the cart. */
   phone?: Maybe<Scalars['String']['output']>;
+  /**
+   * A set of preferences tied to the buyer interacting with the cart. Preferences are used to prefill fields in at checkout to streamline information collection.
+   * Preferences are not synced back to the cart if they are overwritten.
+   *
+   */
+  preferences?: Maybe<CartPreferences>;
+  /** The purchasing company associated with the cart. */
+  purchasingCompany?: Maybe<PurchasingCompany>;
   /**
    * A set of wallet preferences tied to the buyer that is interacting with the cart.
    * Preferences can be used to populate relevant payment fields in the checkout flow.
@@ -740,22 +772,22 @@ export type CartBuyerIdentity = {
  *
  */
 export type CartBuyerIdentityInput = {
+  /** The company location of the buyer that is interacting with the cart. */
+  companyLocationId?: InputMaybe<Scalars['ID']['input']>;
   /** The country where the buyer is located. */
   countryCode?: InputMaybe<CountryCode>;
   /** The access token used to identify the customer associated with the cart. */
   customerAccessToken?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * An ordered set of delivery addresses tied to the buyer that is interacting with the cart.
-   * The rank of the preferences is determined by the order of the addresses in the array. Preferences
-   * can be used to populate relevant fields in the checkout flow.
-   *
-   * The input must not contain more than `250` values.
-   */
-  deliveryAddressPreferences?: InputMaybe<Array<DeliveryAddressInput>>;
   /** The email address of the buyer that is interacting with the cart. */
   email?: InputMaybe<Scalars['String']['input']>;
   /** The phone number of the buyer that is interacting with the cart. */
   phone?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * A set of preferences tied to the buyer interacting with the cart. Preferences are used to prefill fields in at checkout to streamline information collection.
+   * Preferences are not synced back to the cart if they are overwritten.
+   *
+   */
+  preferences?: InputMaybe<CartPreferencesInput>;
 };
 
 /** Return type for `cartBuyerIdentityUpdate` mutation. */
@@ -853,13 +885,37 @@ export type CartCost = {
   totalAmount: MoneyV2;
   /** Whether the total amount is estimated. */
   totalAmountEstimated: Scalars['Boolean']['output'];
-  /** The duty amount for the customer to pay at checkout. */
+  /**
+   * The duty amount for the customer to pay at checkout.
+   * @deprecated Tax and duty amounts are no longer available and will be removed in a future version.
+   * Please see [the changelog](https://shopify.dev/changelog/tax-and-duties-are-deprecated-in-storefront-cart-api)
+   * for more information.
+   *
+   */
   totalDutyAmount?: Maybe<MoneyV2>;
-  /** Whether the total duty amount is estimated. */
+  /**
+   * Whether the total duty amount is estimated.
+   * @deprecated Tax and duty amounts are no longer available and will be removed in a future version.
+   * Please see [the changelog](https://shopify.dev/changelog/tax-and-duties-are-deprecated-in-storefront-cart-api)
+   * for more information.
+   *
+   */
   totalDutyAmountEstimated: Scalars['Boolean']['output'];
-  /** The tax amount for the customer to pay at checkout. */
+  /**
+   * The tax amount for the customer to pay at checkout.
+   * @deprecated Tax and duty amounts are no longer available and will be removed in a future version.
+   * Please see [the changelog](https://shopify.dev/changelog/tax-and-duties-are-deprecated-in-storefront-cart-api)
+   * for more information.
+   *
+   */
   totalTaxAmount?: Maybe<MoneyV2>;
-  /** Whether the total tax amount is estimated. */
+  /**
+   * Whether the total tax amount is estimated.
+   * @deprecated Tax and duty amounts are no longer available and will be removed in a future version.
+   * Please see [the changelog](https://shopify.dev/changelog/tax-and-duties-are-deprecated-in-storefront-cart-api)
+   * for more information.
+   *
+   */
   totalTaxAmountEstimated: Scalars['Boolean']['output'];
 };
 
@@ -881,6 +937,37 @@ export type CartCustomDiscountAllocation = CartDiscountAllocation & {
   title: Scalars['String']['output'];
 };
 
+/** Preferred location used to find the closest pick up point based on coordinates. */
+export type CartDeliveryCoordinatesPreference = {
+  __typename?: 'CartDeliveryCoordinatesPreference';
+  /**
+   * The two-letter code for the country of the preferred location.
+   *
+   * For example, US.
+   *
+   */
+  countryCode: CountryCode;
+  /** The geographic latitude for a given location. Coordinates are required in order to set pickUpHandle for pickup points. */
+  latitude: Scalars['Float']['output'];
+  /** The geographic longitude for a given location. Coordinates are required in order to set pickUpHandle for pickup points. */
+  longitude: Scalars['Float']['output'];
+};
+
+/** Preferred location used to find the closest pick up point based on coordinates. */
+export type CartDeliveryCoordinatesPreferenceInput = {
+  /**
+   * The two-letter code for the country of the preferred location.
+   *
+   * For example, US.
+   *
+   */
+  countryCode: CountryCode;
+  /** The geographic latitude for a given location. Coordinates are required in order to set pickUpHandle for pickup points. */
+  latitude: Scalars['Float']['input'];
+  /** The geographic longitude for a given location. Coordinates are required in order to set pickUpHandle for pickup points. */
+  longitude: Scalars['Float']['input'];
+};
+
 /** Information about the options available for one or more line items to be delivered to a specific address. */
 export type CartDeliveryGroup = {
   __typename?: 'CartDeliveryGroup';
@@ -890,6 +977,8 @@ export type CartDeliveryGroup = {
   deliveryAddress: MailingAddress;
   /** The delivery options available for the delivery group. */
   deliveryOptions: Array<CartDeliveryOption>;
+  /** The type of merchandise in the delivery group. */
+  groupType: CartDeliveryGroupType;
   /** The ID for the delivery group. */
   id: Scalars['ID']['output'];
   /** The selected delivery option for the delivery group. */
@@ -932,6 +1021,21 @@ export type CartDeliveryGroupEdge = {
   node: CartDeliveryGroup;
 };
 
+/**
+ * Defines what type of merchandise is in the delivery group.
+ *
+ */
+export enum CartDeliveryGroupType {
+  /**
+   * The delivery group only contains merchandise that is either a one time purchase or a first delivery of
+   * subscription merchandise.
+   *
+   */
+  OneTimePurchase = 'ONE_TIME_PURCHASE',
+  /** The delivery group only contains subscription merchandise. */
+  Subscription = 'SUBSCRIPTION'
+}
+
 /** Information about a delivery option. */
 export type CartDeliveryOption = {
   __typename?: 'CartDeliveryOption';
@@ -947,6 +1051,44 @@ export type CartDeliveryOption = {
   handle: Scalars['String']['output'];
   /** The title of the delivery option. */
   title?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * A set of preferences tied to the buyer interacting with the cart. Preferences are used to prefill fields in at checkout to streamline information collection.
+ * Preferences are not synced back to the cart if they are overwritten.
+ *
+ */
+export type CartDeliveryPreference = {
+  __typename?: 'CartDeliveryPreference';
+  /** Preferred location used to find the closest pick up point based on coordinates. */
+  coordinates?: Maybe<CartDeliveryCoordinatesPreference>;
+  /** The preferred delivery methods such as shipping, local pickup or through pickup points. */
+  deliveryMethod: Array<PreferenceDeliveryMethodType>;
+  /**
+   * The pickup handle prefills checkout fields with the location for either local pickup or pickup points delivery methods.
+   * It accepts both location ID for local pickup and external IDs for pickup points.
+   *
+   */
+  pickupHandle: Array<Scalars['String']['output']>;
+};
+
+/** Delivery preferences can be used to prefill the delivery section at checkout. */
+export type CartDeliveryPreferenceInput = {
+  /** The coordinates of a delivery location in order of preference. */
+  coordinates?: InputMaybe<CartDeliveryCoordinatesPreferenceInput>;
+  /**
+   * The preferred delivery methods such as shipping, local pickup or through pickup points.
+   *
+   * The input must not contain more than `250` values.
+   */
+  deliveryMethod?: InputMaybe<Array<PreferenceDeliveryMethodType>>;
+  /**
+   * The pickup handle prefills checkout fields with the location for either local pickup or pickup points delivery methods.
+   * It accepts both location ID for local pickup and external IDs for pickup points.
+   *
+   * The input must not contain more than `250` values.
+   */
+  pickupHandle?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 /**
@@ -988,12 +1130,28 @@ export type CartDiscountCodesUpdatePayload = {
 
 /** Possible error codes that can be returned by `CartUserError`. */
 export enum CartErrorCode {
+  /** The specified address field contains emojis. */
+  AddressFieldContainsEmojis = 'ADDRESS_FIELD_CONTAINS_EMOJIS',
+  /** The specified address field contains HTML tags. */
+  AddressFieldContainsHtmlTags = 'ADDRESS_FIELD_CONTAINS_HTML_TAGS',
+  /** The specified address field contains a URL. */
+  AddressFieldContainsUrl = 'ADDRESS_FIELD_CONTAINS_URL',
+  /** The specified address field does not match the expected pattern. */
+  AddressFieldDoesNotMatchExpectedPattern = 'ADDRESS_FIELD_DOES_NOT_MATCH_EXPECTED_PATTERN',
+  /** The specified address field is required. */
+  AddressFieldIsRequired = 'ADDRESS_FIELD_IS_REQUIRED',
+  /** The specified address field is too long. */
+  AddressFieldIsTooLong = 'ADDRESS_FIELD_IS_TOO_LONG',
   /** The input value is invalid. */
   Invalid = 'INVALID',
+  /** Company location not found or not allowed. */
+  InvalidCompanyLocation = 'INVALID_COMPANY_LOCATION',
   /** Delivery group was not found in cart. */
   InvalidDeliveryGroup = 'INVALID_DELIVERY_GROUP',
   /** Delivery option was not valid. */
   InvalidDeliveryOption = 'INVALID_DELIVERY_OPTION',
+  /** The quantity must be a multiple of the specified increment. */
+  InvalidIncrement = 'INVALID_INCREMENT',
   /** Merchandise line was not found in cart. */
   InvalidMerchandiseLine = 'INVALID_MERCHANDISE_LINE',
   /** The metafields were not valid. */
@@ -1002,16 +1160,32 @@ export enum CartErrorCode {
   InvalidPayment = 'INVALID_PAYMENT',
   /** Cannot update payment on an empty cart */
   InvalidPaymentEmptyCart = 'INVALID_PAYMENT_EMPTY_CART',
+  /** The given zip code is invalid for the provided country. */
+  InvalidZipCodeForCountry = 'INVALID_ZIP_CODE_FOR_COUNTRY',
+  /** The given zip code is invalid for the provided province. */
+  InvalidZipCodeForProvince = 'INVALID_ZIP_CODE_FOR_PROVINCE',
   /** The input value should be less than the maximum value allowed. */
   LessThan = 'LESS_THAN',
+  /** The quantity must be below the specified maximum for the item. */
+  MaximumExceeded = 'MAXIMUM_EXCEEDED',
+  /** The quantity must be above the specified minimum for the item. */
+  MinimumNotMet = 'MINIMUM_NOT_MET',
+  /** The customer access token is required when setting a company location. */
+  MissingCustomerAccessToken = 'MISSING_CUSTOMER_ACCESS_TOKEN',
   /** Missing discount code. */
   MissingDiscountCode = 'MISSING_DISCOUNT_CODE',
   /** Missing note. */
   MissingNote = 'MISSING_NOTE',
   /** The payment method is not supported. */
   PaymentMethodNotSupported = 'PAYMENT_METHOD_NOT_SUPPORTED',
+  /** The given province cannot be found. */
+  ProvinceNotFound = 'PROVINCE_NOT_FOUND',
+  /** A general error occurred during address validation. */
+  UnspecifiedAddressError = 'UNSPECIFIED_ADDRESS_ERROR',
   /** Validation failed. */
-  ValidationCustom = 'VALIDATION_CUSTOM'
+  ValidationCustom = 'VALIDATION_CUSTOM',
+  /** The given zip code is unsupported. */
+  ZipCodeNotSupported = 'ZIP_CODE_NOT_SUPPORTED'
 }
 
 /** The estimated costs that the buyer will pay at checkout. The estimated cost uses [`CartBuyerIdentity`](https://shopify.dev/api/storefront/reference/cart/cartbuyeridentity) to determine [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). */
@@ -1313,6 +1487,36 @@ export type CartPaymentUpdatePayload = {
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
   userErrors: Array<CartUserError>;
+};
+
+/**
+ * A set of preferences tied to the buyer interacting with the cart. Preferences are used to prefill fields in at checkout to streamline information collection.
+ * Preferences are not synced back to the cart if they are overwritten.
+ *
+ */
+export type CartPreferences = {
+  __typename?: 'CartPreferences';
+  /** Delivery preferences can be used to prefill the delivery section in at checkout. */
+  delivery?: Maybe<CartDeliveryPreference>;
+  /**
+   * Wallet preferences are used to populate relevant payment fields in the checkout flow.
+   * Accepted value: `["shop_pay"]`.
+   *
+   */
+  wallet?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+/** The input fields represent preferences for the buyer that is interacting with the cart. */
+export type CartPreferencesInput = {
+  /** Delivery preferences can be used to prefill the delivery section in at checkout. */
+  delivery?: InputMaybe<CartDeliveryPreferenceInput>;
+  /**
+   * Wallet preferences are used to populate relevant payment fields in the checkout flow.
+   * Accepted value: `["shop_pay"]`.
+   *
+   * The input must not contain more than `250` values.
+   */
+  wallet?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 /**
@@ -2028,9 +2232,9 @@ export type Collection = HasMetafields & Node & OnlineStorePublishable & Trackab
   id: Scalars['ID']['output'];
   /** Image associated with the collection. */
   image?: Maybe<Image>;
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
   onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
@@ -2040,7 +2244,7 @@ export type Collection = HasMetafields & Node & OnlineStorePublishable & Trackab
   seo: Seo;
   /** The collection’s name. Limit of 255 characters. */
   title: Scalars['String']['output'];
-  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
   /** The date and time when the collection was last modified. */
   updatedAt: Scalars['DateTime']['output'];
@@ -2189,6 +2393,87 @@ export type CommentEdge = {
   cursor: Scalars['String']['output'];
   /** The item at the end of CommentEdge. */
   node: Comment;
+};
+
+/** Represents information about a company which is also a customer of the shop. */
+export type Company = HasMetafields & Node & {
+  __typename?: 'Company';
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company was created in Shopify. */
+  createdAt: Scalars['DateTime']['output'];
+  /** A unique externally-supplied ID for the company. */
+  externalId?: Maybe<Scalars['String']['output']>;
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
+  metafield?: Maybe<Metafield>;
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
+  metafields: Array<Maybe<Metafield>>;
+  /** The name of the company. */
+  name: Scalars['String']['output'];
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company was last modified. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+
+/** Represents information about a company which is also a customer of the shop. */
+export type CompanyMetafieldArgs = {
+  key: Scalars['String']['input'];
+  namespace?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/** Represents information about a company which is also a customer of the shop. */
+export type CompanyMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+/** A company's main point of contact. */
+export type CompanyContact = Node & {
+  __typename?: 'CompanyContact';
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company contact was created in Shopify. */
+  createdAt: Scalars['DateTime']['output'];
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The company contact's locale (language). */
+  locale?: Maybe<Scalars['String']['output']>;
+  /** The company contact's job title. */
+  title?: Maybe<Scalars['String']['output']>;
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company contact was last modified. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** A company's location. */
+export type CompanyLocation = HasMetafields & Node & {
+  __typename?: 'CompanyLocation';
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company location was created in Shopify. */
+  createdAt: Scalars['DateTime']['output'];
+  /** A unique externally-supplied ID for the company. */
+  externalId?: Maybe<Scalars['String']['output']>;
+  /** A globally-unique ID. */
+  id: Scalars['ID']['output'];
+  /** The preferred locale of the company location. */
+  locale?: Maybe<Scalars['String']['output']>;
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
+  metafield?: Maybe<Metafield>;
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
+  metafields: Array<Maybe<Metafield>>;
+  /** The name of the company location. */
+  name: Scalars['String']['output'];
+  /** The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company location was last modified. */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+
+/** A company's location. */
+export type CompanyLocationMetafieldArgs = {
+  key: Scalars['String']['input'];
+  namespace?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/** A company's location. */
+export type CompanyLocationMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
 };
 
 /** The action for the 3DS payment redirect. */
@@ -3205,9 +3490,9 @@ export type Customer = HasMetafields & {
   lastIncompleteCheckout?: Maybe<Checkout>;
   /** The customer’s last name. */
   lastName?: Maybe<Scalars['String']['output']>;
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** The number of orders that the customer has made at the store in their lifetime. */
   numberOfOrders: Scalars['UnsignedInt64']['output'];
@@ -3599,7 +3884,24 @@ export type DeliveryAddressInput = {
   customerAddressId?: InputMaybe<Scalars['ID']['input']>;
   /** A delivery address preference of a buyer that is interacting with the cart. */
   deliveryAddress?: InputMaybe<MailingAddressInput>;
+  /** Defines what kind of address validation is requested. */
+  deliveryAddressValidationStrategy?: InputMaybe<DeliveryAddressValidationStrategy>;
 };
+
+/**
+ * Defines the types of available validation strategies for delivery addresses.
+ *
+ */
+export enum DeliveryAddressValidationStrategy {
+  /** Only the country code is validated. */
+  CountryCodeOnly = 'COUNTRY_CODE_ONLY',
+  /**
+   * Strict validation is performed, i.e. all fields in the address are validated
+   * according to Shopify's checkout rules. If the address fails validation, the cart will not be updated.
+   *
+   */
+  Strict = 'STRICT'
+}
 
 /** List of different delivery method types. */
 export enum DeliveryMethodType {
@@ -3796,11 +4098,30 @@ export type Filter = {
   id: Scalars['String']['output'];
   /** A human-friendly string for this filter. */
   label: Scalars['String']['output'];
+  /**
+   * Describes how to present the filter values.
+   * Returns a value only for filters of type `LIST`. Returns null for other types.
+   *
+   */
+  presentation?: Maybe<FilterPresentation>;
   /** An enumeration that denotes the type of data this filter represents. */
   type: FilterType;
   /** The list of values for this filter. */
   values: Array<FilterValue>;
 };
+
+/**
+ * Defines how to present the filter values, specifies the presentation of the filter.
+ *
+ */
+export enum FilterPresentation {
+  /** Image presentation, filter values display an image. */
+  Image = 'IMAGE',
+  /** Swatch presentation, filter values display color or image patterns. */
+  Swatch = 'SWATCH',
+  /** Text presentation, no additional visual display for filter values. */
+  Text = 'TEXT'
+}
 
 /**
  * The type of data that the filter group represents.
@@ -3825,6 +4146,8 @@ export type FilterValue = {
   count: Scalars['Int']['output'];
   /** A unique identifier. */
   id: Scalars['String']['output'];
+  /** The visual representation when the filter's presentation is `IMAGE`. */
+  image?: Maybe<MediaImage>;
   /**
    * An input object that can be used to filter by this value on the parent field.
    *
@@ -3836,6 +4159,8 @@ export type FilterValue = {
   input: Scalars['JSON']['output'];
   /** A human-friendly string for this filter value. */
   label: Scalars['String']['output'];
+  /** The visual representation when the filter's presentation is `SWATCH`. */
+  swatch?: Maybe<Swatch>;
 };
 
 /** Represents a single fulfillment in an order. */
@@ -3940,9 +4265,9 @@ export type GeoCoordinateInput = {
 
 /** Represents information about the metafields associated to the specified resource. */
 export type HasMetafields = {
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
 };
 
@@ -4132,7 +4457,7 @@ export type Language = {
   name: Scalars['String']['output'];
 };
 
-/** ISO 639-1 language codes supported by Shopify. */
+/** Language codes supported by Shopify. */
 export enum LanguageCode {
   /** Afrikaans. */
   Af = 'AF',
@@ -4446,9 +4771,9 @@ export type Location = HasMetafields & Node & {
   address: LocationAddress;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** The name of the location. */
   name: Scalars['String']['output'];
@@ -4711,9 +5036,9 @@ export type Market = HasMetafields & Node & {
   handle: Scalars['String']['output'];
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
 };
 
@@ -4888,6 +5213,8 @@ export enum MenuItemType {
   Collection = 'COLLECTION',
   /** A collection link. */
   Collections = 'COLLECTIONS',
+  /** A customer account page link. */
+  CustomerAccountPage = 'CUSTOMER_ACCOUNT_PAGE',
   /** A frontpage link. */
   Frontpage = 'FRONTPAGE',
   /** An http link. */
@@ -4994,13 +5321,13 @@ export type MetafieldFilter = {
 };
 
 /** A resource that the metafield belongs to. */
-export type MetafieldParentResource = Article | Blog | Cart | Collection | Customer | Location | Market | Order | Page | Product | ProductVariant | Shop;
+export type MetafieldParentResource = Article | Blog | Cart | Collection | Company | CompanyLocation | Customer | Location | Market | Order | Page | Product | ProductVariant | Shop;
 
 /**
  * Returns the resource which is being referred to by a metafield.
  *
  */
-export type MetafieldReference = Collection | GenericFile | MediaImage | Metaobject | Page | Product | ProductVariant | Video;
+export type MetafieldReference = Collection | GenericFile | MediaImage | Metaobject | Model3d | Page | Product | ProductVariant | Video;
 
 /**
  * An auto-generated type for paginating through multiple MetafieldReferences.
@@ -5481,7 +5808,7 @@ export type MutationCartMetafieldsSetArgs = {
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartNoteUpdateArgs = {
   cartId: Scalars['ID']['input'];
-  note?: InputMaybe<Scalars['String']['input']>;
+  note: Scalars['String']['input'];
 };
 
 
@@ -5731,8 +6058,8 @@ export type MutationCustomerUpdateArgs = {
 /**
  * An object with an ID field to support global identification, in accordance with the
  * [Relay specification](https://relay.dev/graphql/objectidentification.htm#sec-Node-Interface).
- * This interface is used by the [node](https://shopify.dev/api/admin-graphql/unstable/queries/node)
- * and [nodes](https://shopify.dev/api/admin-graphql/unstable/queries/nodes) queries.
+ * This interface is used by the [node](/docs/api/storefront/latest/queries/node)
+ * and [nodes](/docs/api/storefront/latest/queries/nodes) queries.
  *
  */
 export type Node = {
@@ -5765,7 +6092,7 @@ export type Order = HasMetafields & Node & {
   currentTotalPrice: MoneyV2;
   /** The total of all taxes applied to the order, excluding taxes for returned line items. */
   currentTotalTax: MoneyV2;
-  /** A list of the custom attributes added to the order. */
+  /** A list of the custom attributes added to the order. For example, whether an order is a customer's first. */
   customAttributes: Array<Attribute>;
   /** The locale code in which this specific order happened. */
   customerLocale?: Maybe<Scalars['String']['output']>;
@@ -5785,9 +6112,9 @@ export type Order = HasMetafields & Node & {
   id: Scalars['ID']['output'];
   /** List of the order’s line items. */
   lineItems: OrderLineItemConnection;
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /**
    * Unique identifier for the order that appears on the order.
@@ -6057,9 +6384,9 @@ export type Page = HasMetafields & Node & OnlineStorePublishable & Trackable & {
   handle: Scalars['String']['output'];
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
   onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
@@ -6067,7 +6394,7 @@ export type Page = HasMetafields & Node & OnlineStorePublishable & Trackable & {
   seo?: Maybe<Seo>;
   /** The title of the page. */
   title: Scalars['String']['output'];
-  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
   /** The timestamp of the latest page update. */
   updatedAt: Scalars['DateTime']['output'];
@@ -6261,6 +6588,16 @@ export enum PredictiveSearchType {
   Query = 'QUERY'
 }
 
+/** The preferred delivery methods such as shipping, local pickup or through pickup points. */
+export enum PreferenceDeliveryMethodType {
+  /** A delivery method used to let buyers collect purchases at designated locations like parcel lockers. */
+  PickupPoint = 'PICKUP_POINT',
+  /** A delivery method used to let buyers receive items directly from a specific location within an area. */
+  PickUp = 'PICK_UP',
+  /** A delivery method used to send items directly to a buyer’s specified address. */
+  Shipping = 'SHIPPING'
+}
+
 /**
  * The input fields for a filter used to view a subset of products in a collection matching a specific price range.
  *
@@ -6283,25 +6620,36 @@ export type PricingPercentageValue = {
 export type PricingValue = MoneyV2 | PricingPercentageValue;
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type Product = HasMetafields & Node & OnlineStorePublishable & Trackable & {
   __typename?: 'Product';
   /** Indicates if at least one product variant is available for sale. */
   availableForSale: Scalars['Boolean']['output'];
-  /** List of collections a product belongs to. */
+  /** A list of [collections](/docs/api/storefront/latest/objects/Collection) that include the product. */
   collections: CollectionConnection;
-  /** The compare at price of the product across all variants. */
+  /** The [compare-at price range](https://help.shopify.com/manual/products/details/product-pricing/sale-pricing) of the product in the shop's default currency. */
   compareAtPriceRange: ProductPriceRange;
   /** The date and time when the product was created. */
   createdAt: Scalars['DateTime']['output'];
-  /** Stripped description of the product, single line with HTML tags removed. */
+  /** A single-line description of the product, with [HTML tags](https://developer.mozilla.org/en-US/docs/Web/HTML) removed. */
   description: Scalars['String']['output'];
-  /** The description of the product, complete with HTML formatting. */
+  /**
+   * The description of the product, with
+   * HTML tags. For example, the description might include
+   * bold `<strong></strong>` and italic `<i></i>` text.
+   *
+   */
   descriptionHtml: Scalars['HTML']['output'];
   /**
    * The featured image for the product.
@@ -6311,8 +6659,9 @@ export type Product = HasMetafields & Node & OnlineStorePublishable & Trackable 
    */
   featuredImage?: Maybe<Image>;
   /**
-   * A human-friendly unique string for the Product automatically generated from its title.
-   * They are used by the Liquid templating language to refer to objects.
+   * A unique, human-readable string of the product's title.
+   * A handle can contain letters, hyphens (`-`), and numbers, but no spaces.
+   * The handle is used in the online store URL for the product.
    *
    */
   handle: Scalars['String']['output'];
@@ -6322,39 +6671,65 @@ export type Product = HasMetafields & Node & OnlineStorePublishable & Trackable 
   images: ImageConnection;
   /** Whether the product is a gift card. */
   isGiftCard: Scalars['Boolean']['output'];
-  /** The media associated with the product. */
+  /** The [media](/docs/apps/build/online-store/product-media) that are associated with the product. Valid media are images, 3D models, videos. */
   media: MediaConnection;
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
-  /** The URL used for viewing the resource on the shop's Online Store. Returns `null` if the resource is currently not published to the Online Store sales channel. */
+  /**
+   * The product's URL on the online store.
+   * If `null`, then the product isn't published to the online store sales channel.
+   *
+   */
   onlineStoreUrl?: Maybe<Scalars['URL']['output']>;
-  /** List of product options. */
+  /** A list of product options. The limit is defined by the [shop's resource limits for product options](/docs/api/admin-graphql/latest/objects/Shop#field-resourcelimits) (`Shop.resourceLimits.maxProductOptions`). */
   options: Array<ProductOption>;
-  /** The price range. */
+  /**
+   * The minimum and maximum prices of a product, expressed in decimal numbers.
+   * For example, if the product is priced between $10.00 and $50.00,
+   * then the price range is $10.00 - $50.00.
+   *
+   */
   priceRange: ProductPriceRange;
-  /** A categorization that a product can be tagged with, commonly used for filtering and searching. */
+  /**
+   * The [product type](https://help.shopify.com/manual/products/details/product-type)
+   * that merchants define.
+   *
+   */
   productType: Scalars['String']['output'];
   /** The date and time when the product was published to the channel. */
   publishedAt: Scalars['DateTime']['output'];
-  /** Whether the product can only be purchased with a selling plan. */
+  /** Whether the product can only be purchased with a [selling plan](/docs/apps/build/purchase-options/subscriptions/selling-plans). Products that are sold on subscription (`requiresSellingPlan: true`) can be updated only for online stores. If you update a product to be subscription-only (`requiresSellingPlan:false`), then the product is unpublished from all channels, except the online store. */
   requiresSellingPlan: Scalars['Boolean']['output'];
-  /** A list of a product's available selling plan groups. A selling plan group represents a selling method. For example, 'Subscribe and save' is a selling method where customers pay for goods or services per delivery. A selling plan group contains individual selling plans. */
+  /** A list of all [selling plan groups](/docs/apps/build/purchase-options/subscriptions/selling-plans/build-a-selling-plan) that are associated with the product either directly, or through the product's variants. */
   sellingPlanGroups: SellingPlanGroupConnection;
-  /** The product's SEO information. */
+  /**
+   * The [SEO title and description](https://help.shopify.com/manual/promoting-marketing/seo/adding-keywords)
+   * that are associated with a product.
+   *
+   */
   seo: Seo;
   /**
-   * A comma separated list of tags that have been added to the product.
-   * Additional access scope required for private apps: unauthenticated_read_product_tags.
+   * A comma-separated list of searchable keywords that are
+   * associated with the product. For example, a merchant might apply the `sports`
+   * and `summer` tags to products that are associated with sportwear for summer.
+   * Updating `tags` overwrites any existing tags that were previously added to the product.
+   * To add new tags without overwriting existing tags,
+   * use the GraphQL Admin API's [`tagsAdd`](/docs/api/admin-graphql/latest/mutations/tagsadd)
+   * mutation.
    *
    */
   tags: Array<Scalars['String']['output']>;
-  /** The product’s title. */
+  /**
+   * The name for the product that displays to customers. The title is used to construct the product's handle.
+   * For example, if a product is titled "Black Sunglasses", then the handle is `black-sunglasses`.
+   *
+   */
   title: Scalars['String']['output'];
-  /** The total quantity of inventory in stock for this Product. */
+  /** The quantity of inventory that's in stock. */
   totalInventory?: Maybe<Scalars['Int']['output']>;
-  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
   /**
    * The date and time when the product was last modified.
@@ -6371,18 +6746,24 @@ export type Product = HasMetafields & Node & OnlineStorePublishable & Trackable 
    *
    */
   variantBySelectedOptions?: Maybe<ProductVariant>;
-  /** List of the product’s variants. */
+  /** A list of [variants](/docs/api/storefront/latest/objects/ProductVariant) that are associated with the product. */
   variants: ProductVariantConnection;
-  /** The product’s vendor name. */
+  /** The name of the product's vendor. */
   vendor: Scalars['String']['output'];
 };
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductCollectionsArgs = {
@@ -6395,10 +6776,16 @@ export type ProductCollectionsArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductDescriptionArgs = {
@@ -6407,10 +6794,16 @@ export type ProductDescriptionArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductImagesArgs = {
@@ -6424,10 +6817,16 @@ export type ProductImagesArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductMediaArgs = {
@@ -6441,10 +6840,16 @@ export type ProductMediaArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductMetafieldArgs = {
@@ -6454,10 +6859,16 @@ export type ProductMetafieldArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductMetafieldsArgs = {
@@ -6466,10 +6877,16 @@ export type ProductMetafieldsArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductOptionsArgs = {
@@ -6478,10 +6895,16 @@ export type ProductOptionsArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductSellingPlanGroupsArgs = {
@@ -6494,10 +6917,16 @@ export type ProductSellingPlanGroupsArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductVariantBySelectedOptionsArgs = {
@@ -6508,10 +6937,16 @@ export type ProductVariantBySelectedOptionsArgs = {
 
 
 /**
- * A product represents an individual item for sale in a Shopify store. Products are often physical, but they don't have to be.
- * For example, a digital download (such as a movie, music or ebook file) also
- * qualifies as a product, as do services (such as equipment rental, work for hire,
- * customization of another product or an extended warranty).
+ * The `Product` object lets you manage products in a merchant’s store.
+ *
+ * Products are the goods and services that merchants offer to customers.
+ * They can include various details such as title, description, price, images, and options such as size or color.
+ * You can use [product variants](/docs/api/storefront/latest/objects/ProductVariant)
+ * to create or update different versions of the same product.
+ * You can also add or update product [media](/docs/api/storefront/latest/interfaces/Media).
+ * Products can be organized by grouping them into a [collection](/docs/api/storefront/latest/objects/Collection).
+ *
+ * Learn more about working with [products and collections](/docs/storefronts/headless/building-with-the-storefront-api/products-collections).
  *
  */
 export type ProductVariantsArgs = {
@@ -6719,9 +7154,9 @@ export type ProductVariant = HasMetafields & Node & {
   id: Scalars['ID']['output'];
   /** Image associated with the product variant. This field falls back to the product image if no image is available. */
   image?: Maybe<Image>;
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** The product variant’s price. */
   price: MoneyV2;
@@ -6734,6 +7169,10 @@ export type ProductVariant = HasMetafields & Node & {
   product: Product;
   /** The total sellable quantity of the variant for online sales channels. */
   quantityAvailable?: Maybe<Scalars['Int']['output']>;
+  /** A list of quantity breaks for the product variant. */
+  quantityPriceBreaks: QuantityPriceBreakConnection;
+  /** The quantity rule for the product variant in a given context. */
+  quantityRule: QuantityRule;
   /** Whether a customer needs to provide a shipping address when placing an order for the product variant. */
   requiresShipping: Scalars['Boolean']['output'];
   /** List of product options applied to the variant. */
@@ -6775,6 +7214,18 @@ export type ProductVariantMetafieldArgs = {
  */
 export type ProductVariantMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
+};
+
+
+/**
+ * A product variant represents a different version of a product, such as differing sizes or differing colors.
+ *
+ */
+export type ProductVariantQuantityPriceBreaksArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -6847,6 +7298,91 @@ export enum ProductVariantSortKeys {
   /** Sort by the `title` value. */
   Title = 'TITLE'
 }
+
+/** Represents information about the buyer that is interacting with the cart. */
+export type PurchasingCompany = {
+  __typename?: 'PurchasingCompany';
+  /** The company associated to the order or draft order. */
+  company: Company;
+  /** The company contact associated to the order or draft order. */
+  contact?: Maybe<CompanyContact>;
+  /** The company location associated to the order or draft order. */
+  location: CompanyLocation;
+};
+
+/**
+ * Quantity price breaks lets you offer different rates that are based on the
+ * amount of a specific variant being ordered.
+ *
+ */
+export type QuantityPriceBreak = {
+  __typename?: 'QuantityPriceBreak';
+  /**
+   * Minimum quantity required to reach new quantity break price.
+   *
+   */
+  minimumQuantity: Scalars['Int']['output'];
+  /**
+   * The price of variant after reaching the minimum quanity.
+   *
+   */
+  price: MoneyV2;
+};
+
+/**
+ * An auto-generated type for paginating through multiple QuantityPriceBreaks.
+ *
+ */
+export type QuantityPriceBreakConnection = {
+  __typename?: 'QuantityPriceBreakConnection';
+  /** A list of edges. */
+  edges: Array<QuantityPriceBreakEdge>;
+  /** A list of the nodes contained in QuantityPriceBreakEdge. */
+  nodes: Array<QuantityPriceBreak>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/**
+ * An auto-generated type which holds one QuantityPriceBreak and a cursor during pagination.
+ *
+ */
+export type QuantityPriceBreakEdge = {
+  __typename?: 'QuantityPriceBreakEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of QuantityPriceBreakEdge. */
+  node: QuantityPriceBreak;
+};
+
+/**
+ * The quantity rule for the product variant in a given context.
+ *
+ */
+export type QuantityRule = {
+  __typename?: 'QuantityRule';
+  /**
+   * The value that specifies the quantity increment between minimum and maximum of the rule.
+   * Only quantities divisible by this value will be considered valid.
+   *
+   * The increment must be lower than or equal to the minimum and the maximum, and both minimum and maximum
+   * must be divisible by this value.
+   *
+   */
+  increment: Scalars['Int']['output'];
+  /**
+   * An optional value that defines the highest allowed quantity purchased by the customer.
+   * If defined, maximum must be lower than or equal to the minimum and must be a multiple of the increment.
+   *
+   */
+  maximum?: Maybe<Scalars['Int']['output']>;
+  /**
+   * The value that defines the lowest allowed quantity purchased by the customer.
+   * The minimum must be a multiple of the quantity rule's increment.
+   *
+   */
+  minimum: Scalars['Int']['output'];
+};
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRoot = {
@@ -6943,7 +7479,7 @@ export type QueryRoot = {
   productTags: StringConnection;
   /** List of product types for the shop's products that are published to your app. */
   productTypes: StringConnection;
-  /** List of the shop’s products. For storefront search, use [`search` query](https://shopify.dev/docs/api/storefront/latest/queries/search). */
+  /** Returns a list of the shop's products. For storefront search, use the [`search`](https://shopify.dev/docs/api/storefront/latest/queries/search) query. */
   products: ProductConnection;
   /** The list of public Storefront API versions, including supported, release candidate and unstable versions. */
   publicApiVersions: Array<ApiVersion>;
@@ -7240,7 +7776,7 @@ export type SearchQuerySuggestion = Trackable & {
   styledText: Scalars['String']['output'];
   /** The text of the search query suggestion. */
   text: Scalars['String']['output'];
-  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
 };
 
@@ -7604,9 +8140,9 @@ export type Shop = HasMetafields & Node & {
   description?: Maybe<Scalars['String']['output']>;
   /** A globally-unique ID. */
   id: Scalars['ID']['output'];
-  /** Returns a metafield found by namespace and key. */
+  /** A [custom field](https://shopify.dev/docs/apps/build/custom-data), including its `namespace` and `key`, that's associated with a Shopify resource for the purposes of adding and storing additional information. */
   metafield?: Maybe<Metafield>;
-  /** The metafields associated with the resource matching the supplied list of namespaces and keys. */
+  /** A list of [custom fields](/docs/apps/build/custom-data) that a merchant associates with a Shopify resource. */
   metafields: Array<Maybe<Metafield>>;
   /** A string representing the way currency is formatted when the currency isn’t specified. */
   moneyFormat: Scalars['String']['output'];
@@ -7733,7 +8269,7 @@ export type StoreAvailabilityEdge = {
 };
 
 /**
- * An auto-generated type for paginating through a list of Strings.
+ * An auto-generated type for paginating through multiple Strings.
  *
  */
 export type StringConnection = {
@@ -7897,6 +8433,15 @@ export type SubmitThrottled = {
   pollAfter: Scalars['DateTime']['output'];
 };
 
+/** Color and image for visual representation. */
+export type Swatch = {
+  __typename?: 'Swatch';
+  /** The swatch color. */
+  color?: Maybe<Scalars['Color']['output']>;
+  /** The swatch image. */
+  image?: Maybe<MediaImage>;
+};
+
 /**
  * Specifies the fields required to complete a checkout with
  * a tokenized payment.
@@ -7921,7 +8466,7 @@ export type TokenizedPaymentInputV3 = {
 
 /** Represents a resource that you can track the origin of the search traffic. */
 export type Trackable = {
-  /** A URL parameters to be added to a page URL when it is linked from a GraphQL result. This allows for tracking the origin of the traffic. */
+  /** URL parameters to be added to a page URL to track the origin of on-site search traffic for [analytics reporting](https://help.shopify.com/manual/reports-and-analytics/shopify-reports/report-types/default-reports/behaviour-reports). Returns a result when accessed through the [search](https://shopify.dev/docs/api/storefront/current/queries/search) or [predictiveSearch](https://shopify.dev/docs/api/storefront/current/queries/predictiveSearch) queries, otherwise returns null. */
   trackingParameters?: Maybe<Scalars['String']['output']>;
 };
 
@@ -8146,7 +8691,7 @@ export type MenuItemFragment = { __typename?: 'MenuItem', id: string, title: str
 
 export type ShopPolicyFragment = { __typename?: 'ShopPolicy', id: string, handle: string, title: string, body: string };
 
-export type ProductCardFragment = { __typename?: 'Product', id: string, handle: string, title: string, isGiftCard: boolean, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, previewInfo?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null }> } };
+export type ProductCardFragment = { __typename?: 'Product', id: string, handle: string, title: string, isGiftCard: boolean, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, previewInfo?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null }> } };
 
 export type ProductVariantCardFragment = { __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, product: { __typename?: 'Product', id: string, handle: string, title: string, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', title: string, id: string, sku?: string | null, quantityAvailable?: number | null, availableForSale: boolean, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null }> } }, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null };
 
@@ -8280,7 +8825,7 @@ export type GetCollectionPageQueryVariables = Exact<{
 }>;
 
 
-export type GetCollectionPageQuery = { __typename?: 'QueryRoot', collection?: { __typename?: 'Collection', handle: string, title: string, description: string, seo: { __typename?: 'SEO', description?: string | null, title?: string | null }, metafield?: { __typename?: 'Metafield', value: string, type: string, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null } | null, products: { __typename?: 'ProductConnection', filters: Array<{ __typename?: 'Filter', id: string, label: string, type: FilterType, values: Array<{ __typename?: 'FilterValue', id: string, label: string, count: number, input: any }> }> } } | null };
+export type GetCollectionPageQuery = { __typename?: 'QueryRoot', collection?: { __typename?: 'Collection', handle: string, title: string, description: string, seo: { __typename?: 'SEO', description?: string | null, title?: string | null }, metafield?: { __typename?: 'Metafield', value: string, type: string, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null } | null, products: { __typename?: 'ProductConnection', filters: Array<{ __typename?: 'Filter', id: string, label: string, type: FilterType, values: Array<{ __typename?: 'FilterValue', id: string, label: string, count: number, input: any }> }> } } | null };
 
 export type GetCollectionProductsQueryVariables = Exact<{
   handle: Scalars['String']['input'];
@@ -8293,7 +8838,7 @@ export type GetCollectionProductsQueryVariables = Exact<{
 }>;
 
 
-export type GetCollectionProductsQuery = { __typename?: 'QueryRoot', collection?: { __typename?: 'Collection', products: { __typename?: 'ProductConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, nodes: Array<{ __typename?: 'Product', id: string, handle: string, title: string, isGiftCard: boolean, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, previewInfo?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null }> } }>, filters: Array<{ __typename?: 'Filter', id: string, label: string, type: FilterType, values: Array<{ __typename?: 'FilterValue', id: string, label: string, count: number, input: any }> }> } } | null };
+export type GetCollectionProductsQuery = { __typename?: 'QueryRoot', collection?: { __typename?: 'Collection', products: { __typename?: 'ProductConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, nodes: Array<{ __typename?: 'Product', id: string, handle: string, title: string, isGiftCard: boolean, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, previewInfo?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null }> } }>, filters: Array<{ __typename?: 'Filter', id: string, label: string, type: FilterType, values: Array<{ __typename?: 'FilterValue', id: string, label: string, count: number, input: any }> }> } } | null };
 
 export type GetCustomerQueryVariables = Exact<{
   customerAccessToken: Scalars['String']['input'];
@@ -8312,14 +8857,14 @@ export type GetCustomerAddressesQuery = { __typename?: 'QueryRoot', customer?: {
 export type GetInitialDataQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetInitialDataQuery = { __typename?: 'QueryRoot', global?: { __typename?: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, value?: string | null, key: string, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null, references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null }> } | null, contacts?: { __typename?: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, value?: string | null, key: string, references?: { __typename: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', type: string, handle: string, fields: Array<{ __typename?: 'MetaobjectField', key: string, type: string, value?: string | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null }> } | null };
+export type GetInitialDataQuery = { __typename?: 'QueryRoot', global?: { __typename?: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, value?: string | null, key: string, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null, references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null }> } | null, contacts?: { __typename?: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, value?: string | null, key: string, references?: { __typename: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', type: string, handle: string, fields: Array<{ __typename?: 'MetaobjectField', key: string, type: string, value?: string | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null }> } | null };
 
 export type GetHeaderNavigationQueryVariables = Exact<{
   language: LanguageCode;
 }>;
 
 
-export type GetHeaderNavigationQuery = { __typename?: 'QueryRoot', mainMenu?: { __typename?: 'Menu', id: string, handle: string, title: string, items: Array<{ __typename?: 'MenuItem', id: string, title: string, type: MenuItemType, url?: any | null, items: Array<{ __typename?: 'MenuItem', id: string, title: string, type: MenuItemType, url?: any | null }> }> } | null, catalogMenu?: { __typename?: 'Menu', id: string, handle: string, title: string, items: Array<{ __typename?: 'MenuItem', id: string, title: string, type: MenuItemType, url?: any | null, resource?: { __typename: 'Article' } | { __typename: 'Blog' } | { __typename: 'Collection', handle: string, icon?: { __typename?: 'Metafield', reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ShopPolicy' } | null }> } | null };
+export type GetHeaderNavigationQuery = { __typename?: 'QueryRoot', mainMenu?: { __typename?: 'Menu', id: string, handle: string, title: string, items: Array<{ __typename?: 'MenuItem', id: string, title: string, type: MenuItemType, url?: any | null, items: Array<{ __typename?: 'MenuItem', id: string, title: string, type: MenuItemType, url?: any | null }> }> } | null, catalogMenu?: { __typename?: 'Menu', id: string, handle: string, title: string, items: Array<{ __typename?: 'MenuItem', id: string, title: string, type: MenuItemType, url?: any | null, resource?: { __typename: 'Article' } | { __typename: 'Blog' } | { __typename: 'Collection', handle: string, icon?: { __typename?: 'Metafield', reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ShopPolicy' } | null }> } | null };
 
 export type GetFooterNavigationQueryVariables = Exact<{
   language: LanguageCode;
@@ -8334,7 +8879,7 @@ export type GetPageQueryVariables = Exact<{
 }>;
 
 
-export type GetPageQuery = { __typename?: 'QueryRoot', page?: { __typename?: 'Page', handle: string, title: string, body: any, bodySummary: string, seo?: { __typename?: 'SEO', title?: string | null, description?: string | null } | null, blocks?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', handle: string, type: string, fields: Array<{ __typename?: 'MetaobjectField', key: string, type: string, value?: string | null, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject', type: string, fields: Array<{ __typename: 'MetaobjectField', key: string, type: string, value?: string | null, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null, references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection', title: string, handle: string, metafield?: { __typename?: 'Metafield', reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null } | null } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', id: string, fields: Array<{ __typename: 'MetaobjectField', value?: string | null, key: string, type: string, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, product: { __typename?: 'Product', id: string, handle: string, title: string, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', title: string, id: string, sku?: string | null, quantityAvailable?: number | null, availableForSale: boolean, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null }> } }, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null } | { __typename: 'Video' }> } | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null } | null };
+export type GetPageQuery = { __typename?: 'QueryRoot', page?: { __typename?: 'Page', handle: string, title: string, body: any, bodySummary: string, seo?: { __typename?: 'SEO', title?: string | null, description?: string | null } | null, blocks?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', handle: string, type: string, fields: Array<{ __typename?: 'MetaobjectField', key: string, type: string, value?: string | null, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject', type: string, fields: Array<{ __typename: 'MetaobjectField', key: string, type: string, value?: string | null, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null, references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection', title: string, handle: string, metafield?: { __typename?: 'Metafield', reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null } | null } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', id: string, fields: Array<{ __typename: 'MetaobjectField', value?: string | null, key: string, type: string, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, product: { __typename?: 'Product', id: string, handle: string, title: string, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', title: string, id: string, sku?: string | null, quantityAvailable?: number | null, availableForSale: boolean, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null }> } }, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null } | { __typename: 'Video' }> } | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null } | null };
 
 export type GetPrivacyPolicyQueryVariables = Exact<{
   language: LanguageCode;
@@ -8370,7 +8915,7 @@ export type GetProductVariantQueryVariables = Exact<{
 }>;
 
 
-export type GetProductVariantQuery = { __typename?: 'QueryRoot', node?: { __typename?: 'AppliedGiftCard' } | { __typename?: 'Article' } | { __typename?: 'Blog' } | { __typename?: 'Cart' } | { __typename?: 'CartLine' } | { __typename?: 'Checkout' } | { __typename?: 'CheckoutLineItem' } | { __typename?: 'Collection' } | { __typename?: 'Comment' } | { __typename?: 'ComponentizableCartLine' } | { __typename?: 'ExternalVideo' } | { __typename?: 'GenericFile' } | { __typename?: 'Location' } | { __typename?: 'MailingAddress' } | { __typename?: 'Market' } | { __typename?: 'MediaImage' } | { __typename?: 'MediaPresentation' } | { __typename?: 'Menu' } | { __typename?: 'MenuItem' } | { __typename?: 'Metafield' } | { __typename?: 'Metaobject' } | { __typename?: 'Model3d' } | { __typename?: 'Order' } | { __typename?: 'Page' } | { __typename?: 'Payment' } | { __typename?: 'Product' } | { __typename?: 'ProductOption' } | { __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, images?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', id?: string | null, url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null, previewInfo?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null, specification?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, product: { __typename?: 'Product', id: string, handle: string, title: string, descriptionHtml: any, isGiftCard: boolean, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, images: { __typename?: 'ImageConnection', nodes: Array<{ __typename?: 'Image', id?: string | null, altText?: string | null, url: any }> }, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, title: string, quantityAvailable?: number | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null }> } } } | { __typename?: 'Shop' } | { __typename?: 'ShopPolicy' } | { __typename?: 'UrlRedirect' } | { __typename?: 'Video' } | null };
+export type GetProductVariantQuery = { __typename?: 'QueryRoot', node?: { __typename?: 'AppliedGiftCard' } | { __typename?: 'Article' } | { __typename?: 'Blog' } | { __typename?: 'Cart' } | { __typename?: 'CartLine' } | { __typename?: 'Checkout' } | { __typename?: 'CheckoutLineItem' } | { __typename?: 'Collection' } | { __typename?: 'Comment' } | { __typename?: 'Company' } | { __typename?: 'CompanyContact' } | { __typename?: 'CompanyLocation' } | { __typename?: 'ComponentizableCartLine' } | { __typename?: 'ExternalVideo' } | { __typename?: 'GenericFile' } | { __typename?: 'Location' } | { __typename?: 'MailingAddress' } | { __typename?: 'Market' } | { __typename?: 'MediaImage' } | { __typename?: 'MediaPresentation' } | { __typename?: 'Menu' } | { __typename?: 'MenuItem' } | { __typename?: 'Metafield' } | { __typename?: 'Metaobject' } | { __typename?: 'Model3d' } | { __typename?: 'Order' } | { __typename?: 'Page' } | { __typename?: 'Payment' } | { __typename?: 'Product' } | { __typename?: 'ProductOption' } | { __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, images?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', id?: string | null, url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null, previewInfo?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null, specification?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, product: { __typename?: 'Product', id: string, handle: string, title: string, descriptionHtml: any, isGiftCard: boolean, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, images: { __typename?: 'ImageConnection', nodes: Array<{ __typename?: 'Image', id?: string | null, altText?: string | null, url: any }> }, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, title: string, quantityAvailable?: number | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null }> } } } | { __typename?: 'Shop' } | { __typename?: 'ShopPolicy' } | { __typename?: 'UrlRedirect' } | { __typename?: 'Video' } | null };
 
 export type GetProductRecommendationsQueryVariables = Exact<{
   productId: Scalars['ID']['input'];
@@ -8378,7 +8923,7 @@ export type GetProductRecommendationsQueryVariables = Exact<{
 }>;
 
 
-export type GetProductRecommendationsQuery = { __typename?: 'QueryRoot', productRecommendations?: Array<{ __typename?: 'Product', id: string, handle: string, title: string, isGiftCard: boolean, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, previewInfo?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null }> } }> | null };
+export type GetProductRecommendationsQuery = { __typename?: 'QueryRoot', productRecommendations?: Array<{ __typename?: 'Product', id: string, handle: string, title: string, isGiftCard: boolean, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, previewInfo?: { __typename?: 'Metafield', references?: { __typename?: 'MetafieldReferenceConnection', nodes: Array<{ __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage' } | { __typename: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, key: string, value?: string | null }> } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' }> } | null } | null }> } }> | null };
 
 export type SearchProductsQueryVariables = Exact<{
   query: Scalars['String']['input'];
@@ -8394,7 +8939,7 @@ export type GetSeoMetadataQueryVariables = Exact<{
 }>;
 
 
-export type GetSeoMetadataQuery = { __typename?: 'QueryRoot', seo?: { __typename?: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, value?: string | null, key: string, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null }> } | null };
+export type GetSeoMetadataQuery = { __typename?: 'QueryRoot', seo?: { __typename?: 'Metaobject', fields: Array<{ __typename?: 'MetaobjectField', type: string, value?: string | null, key: string, reference?: { __typename: 'Collection' } | { __typename: 'GenericFile' } | { __typename: 'MediaImage', image?: { __typename?: 'Image', url: any, altText?: string | null } | null } | { __typename: 'Metaobject' } | { __typename: 'Model3d' } | { __typename: 'Page' } | { __typename: 'Product' } | { __typename: 'ProductVariant' } | { __typename: 'Video' } | null }> } | null };
 
 export type GetWishlistValuesQueryVariables = Exact<{
   accessToken: Scalars['String']['input'];
@@ -8410,7 +8955,7 @@ export type GetCustomerWishlistQueryVariables = Exact<{
 }>;
 
 
-export type GetCustomerWishlistQuery = { __typename?: 'QueryRoot', customer?: { __typename?: 'Customer', wishlist?: { __typename?: 'Metafield', id: string, references?: { __typename?: 'MetafieldReferenceConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, nodes: Array<{ __typename?: 'Collection' } | { __typename?: 'GenericFile' } | { __typename?: 'MediaImage' } | { __typename?: 'Metaobject' } | { __typename?: 'Page' } | { __typename?: 'Product' } | { __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, product: { __typename?: 'Product', id: string, handle: string, title: string, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', title: string, id: string, sku?: string | null, quantityAvailable?: number | null, availableForSale: boolean, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null }> } }, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null } | { __typename?: 'Video' }> } | null } | null } | null };
+export type GetCustomerWishlistQuery = { __typename?: 'QueryRoot', customer?: { __typename?: 'Customer', wishlist?: { __typename?: 'Metafield', id: string, references?: { __typename?: 'MetafieldReferenceConnection', pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean }, nodes: Array<{ __typename?: 'Collection' } | { __typename?: 'GenericFile' } | { __typename?: 'MediaImage' } | { __typename?: 'Metaobject' } | { __typename?: 'Model3d' } | { __typename?: 'Page' } | { __typename?: 'Product' } | { __typename?: 'ProductVariant', id: string, title: string, sku?: string | null, availableForSale: boolean, quantityAvailable?: number | null, product: { __typename?: 'Product', id: string, handle: string, title: string, options: Array<{ __typename?: 'ProductOption', id: string, name: string, values: Array<string> }>, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', title: string, id: string, sku?: string | null, quantityAvailable?: number | null, availableForSale: boolean, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null, image?: { __typename?: 'Image', url: any, altText?: string | null } | null }> } }, image?: { __typename?: 'Image', url: any, altText?: string | null } | null, price: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode }, compareAtPrice?: { __typename?: 'MoneyV2', amount: any, currencyCode: CurrencyCode } | null, selectedOptions: Array<{ __typename?: 'SelectedOption', name: string, value: string }>, colorHex?: { __typename?: 'Metafield', id: string, value: string, key: string, description?: string | null, type: string } | null } | { __typename?: 'Video' }> } | null } | null } | null };
 
 export const AddressFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"Address"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"MailingAddress"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"formatted"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"company"}},{"kind":"Field","name":{"kind":"Name","value":"address1"}},{"kind":"Field","name":{"kind":"Name","value":"address2"}},{"kind":"Field","name":{"kind":"Name","value":"country"}},{"kind":"Field","name":{"kind":"Name","value":"province"}},{"kind":"Field","name":{"kind":"Name","value":"provinceCode"}},{"kind":"Field","name":{"kind":"Name","value":"city"}},{"kind":"Field","name":{"kind":"Name","value":"zip"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}}]}}]} as unknown as DocumentNode<AddressFragment, unknown>;
 export const MenuItemFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"MenuItem"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"MenuItem"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"url"}}]}}]} as unknown as DocumentNode<MenuItemFragment, unknown>;
