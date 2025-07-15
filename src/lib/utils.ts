@@ -3,9 +3,9 @@ import { twMerge } from 'tailwind-merge'
 import { locales } from '@/navigation'
 import { Path, UseFormSetError } from 'react-hook-form'
 import { ZodIssue } from 'zod'
-import { CurrencyCode, MenuItem, OrderCancelReason } from '@/gql/storefront/graphql'
+import { MenuItem, OrderCancelReason } from '@/gql/storefront/graphql'
 import { SortFilterItem } from './constants'
-import { ReturnReason } from '@/gql/admin/graphql'
+import { CurrencyCode, ReturnReason } from '@/gql/admin/graphql'
 import { IReshapedVariant } from './normalize'
 
 export function cn(...inputs: ClassValue[]) {

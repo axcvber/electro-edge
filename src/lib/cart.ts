@@ -28,9 +28,6 @@ export const createCart = async () => {
         customerAccessToken: session?.accessToken,
         email: session?.user.email,
         phone: session?.user.phone,
-        deliveryAddressPreferences: session?.user?.defaultAddressId
-          ? [{ customerAddressId: session?.user?.defaultAddressId }]
-          : [],
       },
     },
   })
